@@ -144,3 +144,4 @@ dist
 
 localhost-key.pem
 localhost.pem
+db/loc.db

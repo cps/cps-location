@@ -1,15 +1,32 @@
 import opencage from 'opencage-api-client';
-let dummyLoc = [{'id': 1, 'lat': 53.582145, 'lon': 9.985632}]
+import sqlite3 from 'sqlite3';
+
+let db = new sqlite3.Database('./db/loc.db', (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Connected to the database.');
+})
 
 const locRepo = {
-  get: function() {
-    return dummyLoc[dummyLoc.length-1]
-  
+  get: async function() {
+    const sql = `SELECT *
+    FROM locs
+    ORDER BY id DESC
+    LIMIT 1`;
+
+    return new Promise((resolve, reject) => {
+      db.get(sql, (err, row) =>{
+        if(err) reject(err);
+        resolve(row);
+      })
+    });
+    
   },
 
   lastPlace: async function() {
-    const lp = this.get();
-    return reverseGeocode(lp.lat, lp.lon).then((results) => {
+    const lp = await this.get();
+    return reverseGeocode(lp.lat, lp.long).then((results) => {
       return create_pformatted(results);
     }
     ).catch((err) => console.log(err));
@@ -17,8 +34,12 @@ const locRepo = {
   },
 
   set: function(lat, lon) {
-    dummyLoc.push({'id': dummyLoc.length + 1 , 'lat': lat, 'lon': lon})
-    console.log("Added " + JSON.stringify(dummyLoc[dummyLoc.length-1]));
+    const stmt = db.prepare("INSERT INTO locs (lat, long) VALUES (?, ?)");
+    stmt.run(lat, lon);
+    stmt.finalize((err) => {
+      if (err) console.log('DB Fehler:' + err);
+      console.log("Added new location to DB");
+    })
   }
 
 };
