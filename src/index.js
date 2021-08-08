@@ -26,17 +26,27 @@ router.get('/', (req, res) => {
 });
 
 router.get('/set', (req, res) => {
-    res.render('set', { message: 'Hello there!' })
+    res.render('set');
 });
 
 router.post("/set", (req, res) => {
+    const lat = parseFloat(req.query.lat);
+    const long = parseFloat(req.query.long);
+    
+    if(!lat || !long) {
+        res.status(400).json({
+            "status": 400,
+            "statusText": "Error",
+            "message": "Bad Request",
+        });
+    } else {
     locRepo.set(req.query.lat, req.query.long);
     res.status(200).json({
         "status": 200,
         "statusText": "OK",
         "message": "Location set.",
     }
-    );
+    );}
 })
 
 app.use('/', router);
